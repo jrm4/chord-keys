@@ -187,15 +187,11 @@ const NS = 'http://www.w3.org/2000/svg';
 const WW = 44, WH = 200, BW = 28, BH = 125;
 const svg = document.getElementById('kb');
 const keyEls = {};
-let whiteX = 0;
-for(let midi = START_MIDI; midi <= END_MIDI; midi++){
+const BLACK_PCS = [1,3,6,8,10];
+function buildKey(midi, x, w, h, black){
   const pc = midi % 12;
-  const black = [1,3,6,8,10].includes(pc);
   const g = document.createElementNS(NS, 'g');
   g.setAttribute('class', 'key ' + (black ? 'black' : 'white'));
-  let x, w, h = WH;
-  if(black){ x = whiteX - BW/2; w = BW; h = BH; }
-  else { x = whiteX; w = WW; whiteX += WW; }
   const rect = document.createElementNS(NS, 'rect');
   rect.setAttribute('x', x); rect.setAttribute('y', 0);
   rect.setAttribute('width', w); rect.setAttribute('height', h);
@@ -222,6 +218,18 @@ for(let midi = START_MIDI; midi <= END_MIDI; midi++){
   g.addEventListener('click', () => playNote(midi));
   svg.appendChild(g);
   keyEls[midi] = {g, label, badge, bt, black, pc};
+}
+let whiteX = 0;
+for(let midi = START_MIDI; midi <= END_MIDI; midi++){
+  if(BLACK_PCS.includes(midi % 12)) continue;
+  buildKey(midi, whiteX, WW, WH, false);
+  whiteX += WW;
+}
+for(let midi = START_MIDI; midi <= END_MIDI; midi++){
+  if(!BLACK_PCS.includes(midi % 12)) continue;
+  let whitesBefore = 0;
+  for(let m = START_MIDI; m < midi; m++) if(!BLACK_PCS.includes(m % 12)) whitesBefore++;
+  buildKey(midi, whitesBefore * WW - BW / 2, BW, BH, true);
 }
 
 let chords = [], badTokens = [], index = 0;
